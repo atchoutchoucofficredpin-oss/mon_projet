@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer une Vente - Système de Stock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary-blue: #007bff; /* Bleu principal pour les accents */
+            --color-dark-blue: #0056b3;   /* Bleu plus foncé pour le hover */
+            --color-black: #212529;      /* Noir pour le texte */
+            --color-white: #ffffff;      /* Blanc pour les fonds */
+            --color-light-gray: #f8f9fa; /* Gris très clair pour les sections */
+            --color-medium-gray: #e9ecef; /* Gris pour les bordures/séparations */
+            --color-red: #dc3545;        /* Rouge pour les actions négatives */
+            --color-green: #28a745;      /* Vert pour les succès/ajout */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-light-gray);
+            color: var(--color-black);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: var(--color-white);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h1, h2 {
+            color: var(--color-black);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--color-black);
+        }
+
+        select, input[type="number"], input[type="text"] {
+            width: calc(100% - 20px); /* Ajusté pour le padding */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 6px;
+            font-size: 16px;
+            color: var(--color-black);
+            box-sizing: border-box; /* Inclut le padding dans la largeur */
+        }
+        select:focus, input:focus {
+            border-color: var(--color-primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: var(--color-dark-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--color-green);
+            color: var(--color-white);
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--color-red);
+            color: white;
+            border: none;
+            padding: 8px 15px; /* Plus petit pour le bouton de suppression */
+            float: right;
+            margin-left: 10px;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .product-item {
+            border: 1px solid var(--color-medium-gray);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: var(--color-white);
+            position: relative;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+        .product-item h3 {
+            margin-top: 0;
+            color: var(--color-primary-blue);
+            font-size: 1.1em;
+            display: inline-block;
+        }
+
+        .total-display {
+            background-color: var(--color-light-gray);
+            border: 1px solid var(--color-medium-gray);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--color-black);
+        }
+        .total-display span {
+            color: var(--color-primary-blue);
+            font-size: 1.3em;
+        }
+
+        .error-message {
+            color: var(--color-red);
+            background-color: #ffe6e6;
+            border: 1px solid var(--color-red);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Système de Gestion de Stock et Ventes</h1>
+    </div>
+
+    <div class="container">
+        <h1>Créer une Nouvelle Vente</h1>
+
+        {% if error_message %}
+            <div class="error-message">{{ error_message }}</div>
+        {% endif %}
+
+        <form method="post" id="sales-form">
+            {% csrf_token %}
+
+            <label for="client">Client :</label>
+            <select name="client" id="client" required>
+                <option value="">Sélectionnez un client</option>
+                {% for client in clients %}
+                    <option value="{{ client.id }}">{{ client.nom }}</option>
+                {% endfor %}
+            </select>
+
+            <h2>Produits de la Vente</h2>
+            <div id="products-container">
+                </div>
+
+            <button type="button" class="button btn-success" id="add-product">Ajouter un produit</button>
+            
+            <div class="total-display">
+                Total provisoire : <span id="current-total">0.00 €</span>
+            </div>
+
+            <button type="submit" class="button btn-primary" style="width: 100%; margin-top: 25px;">Enregistrer la Vente</button>
+        </form>
+    </div>
+
+    <script>
+        let productCount = 0;
+        const productsContainer = document.getElementById('products-container');
+        const addProductBtn = document.getElementById('add-product');
+        const currentTotalSpan = document.getElementById('current-total');
+
+        // Note: allProducts n'est plus nécessaire car les options sont directement dans le template Django
+        // const allProducts = JSON.parse('{{ produits|safe|escapejs }}'); 
+
+        function calculateTotal() {
+            let total = 0;
+            const productItems = productsContainer.querySelectorAll('.product-item');
+            productItems.forEach(item => {
+                const quantityInput = item.querySelector('[name^="quantite_"]');
+                const priceInput = item.querySelector('[name^="prix_unitaire_vendu_"]');
+                
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                
+                total += quantity * price;
+            });
+            currentTotalSpan.textContent = total.toFixed(2) + ' €';
+        }
+
+        function addProductItem() {
+            const div = document.createElement('div');
+            div.classList.add('product-item');
+            div.setAttribute('data-id', productCount); // Pour référence future si besoin
+
+            const currentId = productCount; // Capture the current productCount
+
+            div.innerHTML = `
+                <button type="button" class="button btn-danger remove-product-btn">X</button>
+                <h3>Article ${currentId + 1}</h3>
+                <label for="produit_id_${currentId}">Produit :</label>
+                <select name="produit_id_${currentId}" id="produit_id_${currentId}" required>
+                    <option value="">Sélectionnez un produit</option>
+                    {% for produit in produits %}
+                        <option value="{{ produit.id }}" data-prix="{{ produit.prix_unitaire }}">{{ produit.nom }} ({{ produit.prix_unitaire }} €)</option>
+                    {% endfor %}
+                </select>
+
+                <label for="quantite_${currentId}">Quantité :</label>
+                <input type="number" name="quantite_${currentId}" id="quantite_${currentId}" min="1" value="1" required>
+
+                <label for="prix_unitaire_vendu_${currentId}">Prix Unitaire Vendu :</label>
+                <input type="number" name="prix_unitaire_vendu_${currentId}" id="prix_unitaire_vendu_${currentId}" step="0.01" required>
+            `;
+            productsContainer.appendChild(div);
+
+            // Attacher les écouteurs d'événements pour le calcul du total
+            const currentProductSelect = document.getElementById(`produit_id_${currentId}`);
+            const currentQuantityInput = document.getElementById(`quantite_${currentId}`);
+            const currentPriceInput = document.getElementById(`prix_unitaire_vendu_${currentId}`);
+            const removeButton = div.querySelector('.remove-product-btn');
+
+            currentProductSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const defaultPrice = selectedOption.dataset.prix;
+                if (defaultPrice) {
+                    currentPriceInput.value = parseFloat(defaultPrice).toFixed(2);
+                }
+                calculateTotal(); // Recalculer le total après changement de produit
+            });
+
+            currentQuantityInput.addEventListener('input', calculateTotal);
+            currentPriceInput.addEventListener('input', calculateTotal);
+
+            removeButton.addEventListener('click', function() {
+                div.remove();
+                calculateTotal(); // Recalculer le total après suppression
+            });
+
+            productCount++;
+            calculateTotal(); // Recalculer le total après l'ajout d'un nouvel article
+        }
+
+        addProductBtn.addEventListener('click', addProductItem);
+
+        // Ajouter un produit par défaut au chargement de la page
+        addProductItem();
+        calculateTotal(); // S'assurer que le total initial est correct
+    </script>
+</body>
+</html>

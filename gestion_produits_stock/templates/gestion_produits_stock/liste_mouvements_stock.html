@@ -1,0 +1,55 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Historique des Mouvements de Stock{% endblock %}
+
+{% block content_title %}<h1>Historique des Mouvements de Stock</h1>{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+
+    {% if not mouvements %}
+        <p>Aucun mouvement de stock enregistré pour l'instant.</p>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Produit</th>
+                        <th>Type de Mouvement</th>
+                        <th>Quantité</th>
+                        <th>Lieu de Stockage</th>
+                        <th>Description</th>
+                        <th>Facture (si vente)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mouvement in mouvements %}
+                        <tr>
+                            <td>{{ mouvement.date_mouvement|date:"d/m/Y H:i" }}</td>
+                            <td>{{ mouvement.produit.nom }} ({{ mouvement.produit.code_produit }})</td>
+                            <td>{{ mouvement.get_type_mouvement_display }}</td>
+                            <td>{{ mouvement.quantite }}</td>
+                            <td>{% if mouvement.lieu_stockage %}{{ mouvement.lieu_stockage.nom }}{% else %}N/A{% endif %}</td>
+                            <td>{{ mouvement.description|default:"-" }}</td>
+                            <td>
+                                {% if mouvement.facture %}
+                                    <a href="{% url 'detail_facture' pk=mouvement.facture.pk %}">Facture #{{ mouvement.facture.id }}</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg">Retour à l'accueil</a>
+    </div>
+
+</div>
+{% endblock %}

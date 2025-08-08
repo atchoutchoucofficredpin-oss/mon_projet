@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Ajouter un Paiement pour la Facture #{{ facture.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-3">Ajouter un paiement pour la Facture #{{ facture.id }}</h1>
+        <p>Client : <a href="{% url 'historique_client' facture.client.pk %}">{{ facture.client.nom }}</a></p>
+        <p>Montant total de la facture : <strong>{{ facture.montant_total|floatformat:2 }} FCFA</strong></p>
+        <p>Solde restant à payer : <strong class="text-danger">{{ solde_restant|floatformat:2 }} FCFA</strong></p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'ajouter_paiement' facture.pk %}">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    Détails du Paiement
+                </div>
+                <div class="card-body">
+                    {{ form.as_p }}
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Enregistrer le paiement</button>
+                    <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

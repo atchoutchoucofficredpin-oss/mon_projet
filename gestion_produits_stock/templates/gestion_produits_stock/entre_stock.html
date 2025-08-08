@@ -1,0 +1,106 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Entrée de Stock{% endblock %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+        }
+        .product-item {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .product-item:hover { background-color: #f0f0f0; }
+        .messages { padding-left: 0; }
+        .alert { margin-bottom: 1rem; }
+    </style>
+{% endblock extrastyle %}
+
+{% block content_title %}<h1>Enregistrer une Entrée de Stock</h1>{% endblock content_title %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+
+    {% if messages %}
+        <ul class="messages list-unstyled mb-4">
+            {% for message in messages %}
+                <li class="alert alert-{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" id="stock-entry-form">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="id_produit_nom" class="form-label">Produit :</label>
+                <input type="text" id="id_produit_nom" name="produit_nom" class="form-control product-search-input" placeholder="Rechercher un produit..." required>
+                <input type="hidden" id="id_produit_id" name="produit_id" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="id_quantite" class="form-label">Quantité à ajouter :</label>
+                <input type="number" id="id_quantite" name="quantite" class="form-control" min="0.01" step="any" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="id_lieu_stockage" class="form-label">Lieu de Stockage :</label>
+                <select id="id_lieu_stockage" name="lieu_stockage" class="form-control" required>
+                    {% for lieu in lieux_stockage %}
+                        <option value="{{ lieu.id }}">{{ lieu.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="id_description" class="form-label">Description (facultatif) :</label>
+                <textarea id="id_description" name="description" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Enregistrer l'entrée</button>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg ms-2">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extrajs %}
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialisation de l'autocomplétion pour le champ produit
+            $('#id_produit_nom').autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "{% url 'recherche_produit_ajax' %}", // Utilise votre vue existante
+                        dataType: "json",
+                        data: {
+                            q: request.term
+                        },
+                        success: function(data) {
+                            response($.map(data, function(item) {
+                                return {
+                                    label: item.nom + " (" + item.code_produit + ")",
+                                    value: item.nom,
+                                    id: item.id
+                                };
+                            }));
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    $('#id_produit_id').val(ui.item.id); // Met à jour le champ caché avec l'ID du produit
+                    return true; // Laisse la valeur sélectionnée dans l'input texte
+                }
+            });
+        });
+    </script>
+{% endblock extrajs %}

@@ -1,0 +1,293 @@
+{% extends 'admin/base.html' %}
+{% load static i18n widget_tweaks %}
+
+{% block title %}Nouvelle Facture de Vente{% endblock %}
+
+{% block extrastyle %}
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        /* Styles personnalisés pour l'autocomplétion pour une meilleure visibilité */
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .ui-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+        .ui-menu-item:last-child {
+            border-bottom: none;
+        }
+        .ui-menu-item:hover, .ui-menu-item.ui-state-focus {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .ui-helper-hidden-accessible { display: none; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-3">
+            {% if facture %}
+                Modifier la Facture #{{ facture.id }}
+            {% else %}
+                Nouvelle Facture de Vente
+            {% endif %}
+        </h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="card mb-3">
+                <div class="card-header">Informations de la Facture</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ facture_form.client.id_for_label }}">Client</label>
+                                {% render_field facture_form.client class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ facture_form.date_facturation.id_for_label }}">Date</label>
+                                {% render_field facture_form.date_facturation class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                             <div class="form-group mb-3">
+                                <label for="{{ facture_form.notes.id_for_label }}">Notes</label>
+                                {% render_field facture_form.notes class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    Produits
+                    <button type="button" class="btn btn-sm btn-primary" id="add-item-btn">Ajouter une ligne</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm mb-0" id="ligne-facture-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%;">Produit</th>
+                                    <th style="width: 15%;">Quantité</th>
+                                    <th style="width: 20%;">Prix Négocié</th>
+                                    <th style="width: 15%;">Total</th>
+                                    <th style="width: 10%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ formset.management_form }}
+                                {% for form in formset %}
+                                <tr class="formset-row">
+                                    <td>
+                                        {% if form.instance.pk %}
+                                            <input type="text" value="{{ form.instance.produit.nom }}" class="form-control" readonly>
+                                            <input type="hidden" name="{{ form.produit.html_name }}" value="{{ form.instance.produit.pk }}">
+                                        {% else %}
+                                            <input type="text" name="produit_autocomplete" class="form-control product-autocomplete" placeholder="Rechercher un produit...">
+                                            {% render_field form.produit type="hidden" %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% render_field form.quantite class="form-control quantite-input" %}
+                                        <span class="stock-info badge bg-secondary mt-1" style="display: none;"></span>
+                                    </td>
+                                    <td>
+                                        {% render_field form.prix_unitaire_negocie class="form-control prix-input" %}
+                                    </td>
+                                    <td class="line-total">0.00</td>
+                                    <td>
+                                        {% if form.instance.pk %}
+                                            {% render_field form.DELETE %}
+                                            <button type="button" class="btn btn-sm btn-danger remove-row">Supprimer</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-danger remove-row">Supprimer</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total Facture :</strong></td>
+                                    <td colspan="2" id="total-facture">0.00 FCFA</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                {% if facture %}
+                    Enregistrer les modifications
+                {% else %}
+                    Enregistrer la Facture
+                {% endif %}
+            </button>
+            <a href="{% url 'liste_factures' %}" class="btn btn-secondary">Annuler</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+
+            // Fonction pour mettre à jour les totaux de chaque ligne et le total de la facture
+            function updateTotals() {
+                let totalFacture = 0;
+                $('#ligne-facture-table tbody tr').each(function() {
+                    const row = $(this);
+                    // Ignore les lignes marquées pour suppression
+                    if (row.find('input[name$="-DELETE"]').is(':checked')) {
+                        return;
+                    }
+
+                    const quantite = parseFloat(row.find('.quantite-input').val()) || 0;
+                    const prix = parseFloat(row.find('.prix-input').val()) || 0;
+                    const lineTotal = quantite * prix;
+
+                    row.find('.line-total').text(lineTotal.toFixed(2) + ' FCFA');
+                    totalFacture += lineTotal;
+                });
+                $('#total-facture').text(totalFacture.toFixed(2) + ' FCFA');
+            }
+
+            // Fonction pour initialiser l'autocomplétion sur un élément donné
+            function initAutocomplete(element) {
+                $(element).autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: "{% url 'recherche_produit_ajax' %}",
+                            data: {
+                                term: request.term
+                            },
+                            dataType: 'json',
+                            success: function(data) {
+                                response($.map(data, function(item) {
+                                    return {
+                                        label: `${item.nom} (Stock: ${item.stock_quantite})`,
+                                        value: item.nom, // Le nom du produit à afficher
+                                        produitId: item.id,
+                                        prixUnitaire: item.prix_unitaire,
+                                        stockQuantite: item.stock_quantite
+                                    };
+                                }));
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                console.error("Erreur de l'appel AJAX pour l'autocomplétion :", textStatus, errorThrown);
+                            }
+                        });
+                    },
+                    minLength: 2,
+                    select: function(event, ui) {
+                        const row = $(this).closest('tr');
+                        // Met à jour le champ caché avec l'ID du produit
+                        row.find('input[name$="-produit"]').val(ui.item.produitId);
+                        // Met à jour le champ de prix
+                        row.find('.prix-input').val(ui.item.prixUnitaire).trigger('change');
+                        // Affiche le stock disponible
+                        row.find('.stock-info').text(`Stock: ${ui.item.stockQuantite}`).show();
+                        updateTotals();
+                        return false;
+                    }
+                });
+            }
+
+            // Gérer les événements de changement sur les champs Quantité et Prix
+            $(document).on('change', '.quantite-input, .prix-input', updateTotals);
+
+            // Gérer l'ajout de lignes
+            $('#add-item-btn').click(function() {
+                const formCount = $('#id_lignes-TOTAL_FORMS').val();
+                let newRowHtml = $('#empty_form').html().replace(/__prefix__/g, formCount);
+                
+                // Mettre à jour les attributs de nom pour qu'ils soient corrects
+                newRowHtml = newRowHtml.replace(/produit_autocomplete_prefix/g, `lignes-${formCount}-produit_autocomplete`);
+                newRowHtml = newRowHtml.replace(/produit_id_prefix/g, `lignes-${formCount}-produit`);
+                newRowHtml = newRowHtml.replace(/quantite_prefix/g, `lignes-${formCount}-quantite`);
+                newRowHtml = newRowHtml.replace(/prix_prefix/g, `lignes-${formCount}-prix_unitaire_negocie`);
+
+                const newRow = $(newRowHtml);
+
+                $('#ligne-facture-table tbody').append(newRow);
+                $('#id_lignes-TOTAL_FORMS').val(parseInt(formCount) + 1);
+
+                // Initialiser l'autocomplétion sur la nouvelle ligne ajoutée
+                initAutocomplete(newRow.find('.product-autocomplete'));
+                updateTotals();
+            });
+
+            // Gérer la suppression de lignes
+            $(document).on('click', '.remove-row', function() {
+                const row = $(this).closest('.formset-row');
+                const deleteInput = row.find('input[name$="-DELETE"]');
+
+                if (deleteInput.length) {
+                    // Pour les lignes existantes, marquer pour suppression
+                    deleteInput.prop('checked', true);
+                    row.hide();
+                } else {
+                    // Pour les nouvelles lignes, les retirer simplement
+                    row.remove();
+                }
+                updateTotals();
+            });
+            
+            // Initialiser l'autocomplétion sur les champs de la première ligne au chargement de la page
+            initAutocomplete('.product-autocomplete');
+            updateTotals();
+        });
+    </script>
+
+    <template id="empty_form">
+        <tr class="formset-row">
+            <td>
+                <input type="text" name="lignes-__prefix__-produit_autocomplete" class="form-control product-autocomplete" placeholder="Rechercher un produit...">
+                <input type="hidden" name="lignes-__prefix__-produit" id="id_lignes-__prefix__-produit">
+            </td>
+            <td>
+                <input type="number" name="lignes-__prefix__-quantite" class="form-control quantite-input" min="0.01" step="any" required>
+                <span class="stock-info badge bg-secondary mt-1" style="display: none;"></span>
+            </td>
+            <td>
+                <input type="number" name="lignes-__prefix__-prix_unitaire_negocie" class="form-control prix-input" step="any" required>
+            </td>
+            <td class="line-total">0.00 FCFA</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger remove-row">Supprimer</button>
+            </td>
+        </tr>
+    </template>
+{% endblock extrajs %}

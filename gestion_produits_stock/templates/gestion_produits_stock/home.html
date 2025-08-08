@@ -1,0 +1,70 @@
+{% extends 'admin/base.html' %}
+{% load static i18n %}
+
+{% block title %}Accueil Gestion de Stock{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3"> {# Utilisation de container-fluid pour une largeur maximale #}
+    <h1 class="mb-4 text-center">Bienvenue dans la Gestion de Stock !</h1>
+
+    {% if messages %}
+        <ul class="messages list-unstyled mb-4">
+            {% for message in messages %}
+                <li class="alert alert-{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="row text-center mb-4">
+        <div class="col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Produits</h5>
+                    <p class="card-text fs-2">{{ total_produits }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clients</h5>
+                    <p class="card-text fs-2">{{ total_clients }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title mb-0">Navigation Rapide</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a href="{% url 'interface_vente' %}" class="btn btn-primary btn-block">Accéder à l'Interface de Vente</a></li>
+                <li class="list-group-item"><a href="{% url 'liste_factures' %}" class="btn btn-secondary btn-block">Voir la Liste des Factures</a></li>
+                <li class="list-group-item"><a href="{% url 'admin:index' %}" class="btn btn-info btn-block">Accéder à l'Administration (Jazzmin)</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title mb-0">Dernières Factures</h2>
+        </div>
+        <div class="card-body">
+            {% if dernieres_factures %}
+            <ul class="list-group list-group-flush">
+                {% for facture in dernieres_factures %}
+                    <li class="list-group-item">
+                        Facture #{{ facture.id }} - Client: {{ facture.client.nom }} - Montant: {{ facture.montant_total }} - Date: {{ facture.date_facturation|date:"d/m/Y" }}
+                        <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-sm btn-outline-primary ms-2">Détails</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>Aucune facture récente.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

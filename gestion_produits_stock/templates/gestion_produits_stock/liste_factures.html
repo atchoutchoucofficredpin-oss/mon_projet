@@ -1,0 +1,66 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Liste des Factures{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-3">Liste des Factures</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="mb-3">
+            <a href="{% url 'interface_vente' %}" class="btn btn-success">Créer une nouvelle facture</a>
+        </div>
+
+        {% if factures %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Montant total</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for facture in factures %}
+                    <tr>
+                        <td>{{ facture.id }}</td>
+                        <td>{{ facture.client.nom }}</td>
+                        <td>{{ facture.date_facturation|date:"d M Y" }}</td>
+                        <td>{{ facture.montant_total|floatformat:2 }} FCFA</td>
+                        <td>
+                            {% if facture.est_payee %}
+                                <span class="badge bg-success">Payée</span>
+                            {% else %}
+                                <span class="badge bg-danger">Non Payée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-sm btn-info">Détails</a>
+                            <a href="{% url 'modifier_vente' facture.pk %}" class="btn btn-sm btn-warning">Modifier</a>
+                            <a href="{% url 'generer_facture_pdf' facture.pk %}" class="btn btn-sm btn-primary" target="_blank">PDF</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>Aucune facture n'a été enregistrée.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

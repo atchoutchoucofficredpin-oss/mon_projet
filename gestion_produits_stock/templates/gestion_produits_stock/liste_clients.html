@@ -1,0 +1,53 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Clients{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-3">Liste des Clients</h1>
+        <div class="d-flex justify-content-between mb-3">
+            <a href="{% url 'ajouter_client' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouveau Client
+            </a>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Rechercher un client" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Rechercher</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Téléphone</th>
+                                <th>Email</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in clients %}
+                            <tr>
+                                <td>{{ client.nom }}</td>
+                                <td>{{ client.telephone|default:"-" }}</td>
+                                <td>{{ client.email|default:"-" }}</td>
+                                <td class="text-right">
+                                    <a href="{% url 'banque_caisse_client' client.pk %}" class="btn btn-sm btn-success">Banque & Caisse</a>
+                                    <a href="{% url 'historique_client' client.pk %}" class="btn btn-sm btn-info">Factures</a>
+                                    <a href="{% url 'modifier_client' client.pk %}" class="btn btn-sm btn-primary">Modifier</a>
+                                    <a href="{% url 'supprimer_client' client.pk %}" class="btn btn-sm btn-danger">Supprimer</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

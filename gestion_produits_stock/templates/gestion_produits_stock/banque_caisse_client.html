@@ -1,0 +1,149 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Banque & Caisse - {{ client.nom }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1>Banque & Caisse pour : {{ client.nom }}</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-3 text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">Montant total dû</h5>
+                        <p class="card-text fs-2">{{ total_factures|floatformat:2 }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Total payé</h5>
+                        <p class="card-text fs-2">{{ total_paiements|floatformat:2 }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Solde restant à payer</h5>
+                        <p class="card-text fs-2">{{ solde_total|floatformat:2 }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Enregistrer un paiement
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary mt-2">Enregistrer le paiement</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Historique des paiements
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Montant</th>
+                                        <th>Méthode</th>
+                                        <th>Facture concernée</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for paiement in historique_paiements %}
+                                    <tr>
+                                        <td>{{ paiement.date_paiement|date:"d M Y H:i" }}</td>
+                                        <td>{{ paiement.montant_paye|floatformat:2 }} FCFA</td>
+                                        <td>{{ paiement.get_methode_paiement_display }}</td>
+                                        <td><a href="{% url 'detail_facture' paiement.facture.pk %}">#{{ paiement.facture.id }}</a></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">Aucun paiement enregistré pour ce client.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                Factures du client
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Date</th>
+                                <th>Montant Total</th>
+                                <th>Solde restant</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for facture in factures %}
+                            <tr>
+                                <td><a href="{% url 'detail_facture' facture.pk %}">#{{ facture.id }}</a></td>
+                                <td>{{ facture.date_facturation|date:"d M Y" }}</td>
+                                <td>{{ facture.montant_total|floatformat:2 }} FCFA</td>
+                                <td>{{ facture.solde_restant|floatformat:2 }} FCFA</td>
+                                <td>
+                                    {% if facture.est_payee %}
+                                        <span class="badge bg-success">Payée</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Non Payée</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-sm btn-info">Détails</a>
+                                    <a href="{% url 'generer_facture_pdf' facture.pk %}" class="btn btn-sm btn-secondary" target="_blank">PDF</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Aucune facture enregistrée pour ce client.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'liste_clients' %}" class="btn btn-secondary mt-3">Retour à la liste des clients</a>
+    </div>
+</div>
+{% endblock %}

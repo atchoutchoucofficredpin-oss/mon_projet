@@ -1,0 +1,65 @@
+{# C:\MON PROJET\gestion_produits_stock\templates\gestion_produits_stock\inventaire_base.html #}
+{% extends 'admin/base.html' %} {# <--- HÉRITE DU TEMPLATE DE BASE DE L'ADMIN DJANGO #}
+{% load static %} {# Pour utiliser {% static %} si vous aviez des assets spécifiques ici #}
+
+{# Définit le titre de la page (onglet du navigateur) #}
+{% block title %}{{ page_title }} | {{ site_title }}{% endblock %}
+
+{# Le block 'branding' est souvent utilisé pour le logo/nom du site en haut à gauche #}
+{% block branding %}
+    {# Jazzmin fournit déjà site_logo, site_header via le contexte, vous n'avez pas besoin de les gérer manuellement ici, #}
+    {# mais vous pouvez surcharger si nécessaire. Pour l'instant, on laisse Jazzmin gérer. #}
+    <a href="{% url 'admin:index' %}" class="{% if not brand_url %}navbar-brand{% endif %}">
+        {% if site_logo %}<img src="{% static site_logo %}" alt="{{ site_header }}" width="30" height="30" class="d-inline-block align-top mr-2">{% endif %}
+        {{ site_header }}
+    </a>
+{% endblock %}
+
+{# C'est le bloc principal où tout le contenu de la page va être inséré #}
+{% block content %}
+    <div class="container-fluid"> {# Utilisez container-fluid pour une largeur complète dans Jazzmin #}
+        {# La partie titre et onglets reste ici, mais sans le <body>, <html>, etc. #}
+        <h2 class="mb-4">{{ page_title }}</h2>
+
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'global' %}active{% endif %}" href="{% url 'gestion_produits_stock:inventaire_global' %}">
+                    <i class="fas fa-globe"></i> Inventaire Global
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'par_lieu' %}active{% endif %}" href="{% url 'gestion_produits_stock:inventaire_par_lieu' %}">
+                    <i class="fas fa-warehouse"></i> Inventaire par Lieu
+                </a>
+            </li>
+        </ul>
+
+        {# Ce bloc interne sera rempli par inventaire_global.html ou inventaire_par_lieu.html #}
+        {% block inventory_content %}
+        {# Le contenu spécifique à chaque page d'inventaire sera inséré ici #}
+        {% endblock %}
+    </div>
+{% endblock %}
+
+{# Vous pouvez ajouter du CSS ou JS spécifique à ces pages ici #}
+{% block extrahead %}
+    {# Jazzmin utilise déjà Bootstrap 5 et Font Awesome, donc pas besoin de les inclure à nouveau #}
+    <style>
+        /* Styles personnalisés pour les alertes de stock bas et les en-têtes de carte */
+        .alert-low-stock {
+            background-color: #ffe0e0; /* Un rouge très clair */
+            border-color: #ffb3b3;    /* Bordure rouge */
+            color: #cc0000;           /* Texte rouge foncé */
+            font-weight: bold;
+        }
+        .card-header {
+            background-color: var(--bs-primary); /* Utilise la couleur primaire de Bootstrap/Jazzmin */
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{# Le block extrabody est pour le JS en bas de page si nécessaire #}
+{% block extrabody %}
+    {# Vos scripts JS personnalisés ici #}
+{% endblock %}

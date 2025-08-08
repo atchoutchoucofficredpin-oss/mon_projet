@@ -1,0 +1,167 @@
+/* mon_logiciel_gestion/frontend/src/App.css */
+
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 2.5em;
+}
+
+.App-header p {
+  margin: 5px 0 15px;
+  font-size: 1.1em;
+  opacity: 0.8;
+}
+
+.App-header nav button {
+  background-color: #61dafb;
+  color: #282c34;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+
+.App-header nav button:hover {
+  background-color: #21a1f1;
+  color: white;
+}
+
+.App-main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.App-main h2 {
+  color: #282c34;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #61dafb;
+  padding-bottom: 10px;
+  display: inline-block;
+}
+
+.liste-elements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  justify-content: center;
+}
+
+.carte-element {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.carte-element h3 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.carte-element p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.erreur {
+  color: #d9534f;
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.App-footer {
+  background-color: #282c34;
+  color: white;
+  padding: 15px;
+  margin-top: 40px;
+  font-size: 0.9em;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Styles pour le formulaire de paiement */
+.form-paiement, .form-transfert { /* Ajout de .form-transfert */
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 5px;
+}
+
+.form-paiement h4, .form-transfert h4 { /* Ajout de .form-transfert h4 */
+  color: #282c34;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.form-paiement label, .form-transfert label { /* Ajout de .form-transfert label */
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #555;
+  text-align: left;
+}
+
+.form-paiement input[type="number"],
+.form-paiement select,
+.form-transfert input, /* Ajout de input pour transfert */
+.form-transfert select, /* Ajout de select pour transfert */
+.form-transfert textarea { /* Ajout de textarea pour transfert */
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-paiement button, .form-transfert button { /* Ajout de .form-transfert button */
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.form-paiement button[type="button"], .form-transfert button[type="button"] { /* Ajout de .form-transfert button[type="button"] */
+  background-color: #dc3545;
+}
+
+.form-paiement button:hover, .form-transfert button:hover { /* Ajout de .form-transfert button:hover */
+  opacity: 0.9;
+}

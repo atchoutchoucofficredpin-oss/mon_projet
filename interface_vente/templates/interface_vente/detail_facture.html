@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détail de la Facture #{{ facture.id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary-blue: #007bff;
+            --color-dark-blue: #0056b3;
+            --color-black: #212529;
+            --color-white: #ffffff;
+            --color-light-gray: #f8f9fa;
+            --color-medium-gray: #e9ecef;
+            --color-red: #dc3545;
+            --color-green: #28a745;
+            --color-orange: #ffc107; /* Pour le statut "Dû" */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-light-gray);
+            color: var(--color-black);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: var(--color-white);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h1, h2 {
+            color: var(--color-black);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        p { margin: 10px 0; font-size: 1.1em; }
+        p strong { color: var(--color-primary-blue); }
+
+        ul { list-style: none; padding: 0; margin: 20px 0; }
+        li {
+            background: var(--color-light-gray);
+            border: 1px solid var(--color-medium-gray);
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        li span {
+            font-weight: bold;
+            color: var(--color-black);
+        }
+
+        .total-summary {
+            background-color: var(--color-light-gray);
+            border: 1px solid var(--color-medium-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .total-summary p {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2em;
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--color-medium-gray);
+        }
+        .total-summary p:last-child {
+            border-bottom: none;
+        }
+        .total-summary p strong {
+            font-size: 1.1em;
+        }
+        .total-summary p span {
+            font-weight: bold;
+        }
+
+        .status-paid { color: var(--color-green); }
+        .status-due { color: var(--color-orange); }
+        .status-text { font-weight: bold; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .back-link:hover {
+            background-color: var(--color-dark-blue);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Système de Gestion de Stock et Ventes</h1>
+    </div>
+
+    <div class="container">
+        <h1>Détail de la Facture #{{ facture.id }}</h1>
+        <p><strong>Client :</strong> {{ facture.client.nom }}</p>
+        <p><strong>Date de Facturation :</strong> {{ facture.date_facturation|date:"d/m/Y H:i" }}</p>
+
+        <h2>Lignes de Facture :</h2>
+        {% if facture.lignes_facture.all %}
+            <ul>
+                {% for ligne in facture.lignes_facture.all %}
+                    <li>
+                        <span>{{ ligne.produit.nom }} ({{ ligne.quantite }} unités)</span>
+                        <span>{{ ligne.prix_unitaire_vendu }} €/u HT</span>
+                        <span>Total: {{ ligne.total_ligne_ht }} € HT</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucune ligne de facture pour le moment.</p>
+        {% endif %}
+
+        <div class="total-summary">
+            <p><strong>Total Hors Taxe :</strong> <span>{{ facture.total_ht }} €</span></p>
+            <p><strong>Total Toutes Taxes Comprises :</strong> <span>{{ facture.total_ttc }} €</span></p>
+            <p><strong>Montant Payé :</strong> <span>{{ facture.montant_paye }} €</span></p>
+            <p>
+                <strong>Montant Dû :</strong>
+                <span class="{% if facture.montant_du > 0 %}status-due{% else %}status-paid{% endif %}">
+                    {{ facture.montant_du }} €
+                </span>
+            </p>
+            <p>
+                <strong>Statut de la Facture :</strong>
+                <span class="status-text {% if facture.payee %}status-paid{% else %}status-due{% endif %}">
+                    {% if facture.payee %}Payée{% else %}Non Payée{% endif %}
+                </span>
+            </p>
+        </div>
+
+        <a href="{% url 'creer_vente' %}" class="back-link">← Retour à la Création de Vente</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Détail de la Facture #{{ facture.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="mb-3">Détail de la Facture #{{ facture.id }}</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a href="{% url 'liste_factures' %}" class="btn btn-outline-secondary">Retour à la liste</a>
+                <a href="{% url 'modifier_vente' facture.pk %}" class="btn btn-warning">Modifier la facture</a>
+            </div>
+            <a href="{% url 'generer_facture_pdf' facture.pk %}" class="btn btn-primary" target="_blank">
+                Générer PDF
+            </a>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                Informations sur la facture
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Numéro de facture :</dt>
+                    <dd class="col-sm-9">#{{ facture.id }}</dd>
+
+                    <dt class="col-sm-3">Client :</dt>
+                    <dd class="col-sm-9">
+                        <a href="{% url 'historique_client' facture.client.pk %}">{{ facture.client.nom }}</a>
+                    </dd>
+
+                    <dt class="col-sm-3">Date de facturation :</dt>
+                    <dd class="col-sm-9">{{ facture.date_facturation|date:"d M Y H:i" }}</dd>
+
+                    <dt class="col-sm-3">Statut :</dt>
+                    <dd class="col-sm-9">
+                        {% if facture.est_payee %}
+                            <span class="badge bg-success">Payée</span>
+                        {% else %}
+                            <span class="badge bg-danger">Non Payée</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Montant total :</dt>
+                    <dd class="col-sm-9">{{ facture.montant_total|floatformat:2 }} FCFA</dd>
+                    
+                    {% if solde_du > 0 %}
+                    <dt class="col-sm-3 text-danger">Solde dû :</dt>
+                    <dd class="col-sm-9 text-danger">{{ solde_du|floatformat:2 }} FCFA</dd>
+                    {% endif %}
+
+                    <dt class="col-sm-3">Notes :</dt>
+                    <dd class="col-sm-9">{{ facture.notes|default_if_none:"-" }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                Paiements
+                <div class="float-end">
+                    <a href="{% url 'ajouter_paiement' facture.pk %}" class="btn btn-sm btn-success">
+                        Ajouter un paiement
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if paiements %}
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Montant payé</th>
+                            <th>Méthode</th>
+                            <th>Référence</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paiement in paiements %}
+                        <tr>
+                            <td>{{ paiement.date_paiement|date:"d M Y H:i" }}</td>
+                            <td>{{ paiement.montant_paye|floatformat:2 }} FCFA</td>
+                            <td>{{ paiement.get_methode_paiement_display }}</td>
+                            <td>{{ paiement.reference_paiement|default_if_none:"-" }}</td>
+                            <td>{{ paiement.notes|default_if_none:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>Aucun paiement n'a encore été enregistré pour cette facture.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                Détail des produits
+            </div>
+            <div class="card-body">
+                {% if lignes_facture %}
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Quantité</th>
+                            <th>Prix Unitaire Négocié</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in lignes_facture %}
+                        <tr>
+                            <td>{{ ligne.produit.nom }}</td>
+                            <td>{{ ligne.quantite|floatformat:2 }}</td>
+                            <td>{{ ligne.prix_unitaire_negocie|floatformat:2 }} FCFA</td>
+                            <td>{{ ligne.total|floatformat:2 }} FCFA</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>Cette facture ne contient aucune ligne de produit.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
