@@ -1,69 +1,63 @@
-{% extends 'admin/base.html' %}
-{% load static i18n %}
+{% extends 'gestion_produits_stock/base.html' %}
+{% load static %}
 
-{% block title %}Accueil Gestion de Stock{% endblock %}
+{% block title %}Tableau de bord - ADAMA SOUMARE DISTRIBUTION (ASD){% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-3"> {# Utilisation de container-fluid pour une largeur maximale #}
-    <h1 class="mb-4 text-center">Bienvenue dans la Gestion de Stock !</h1>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Tableau de Bord</h2>
+        <p>Bienvenue sur votre tableau de bord. Voici un aperçu rapide de l'état de votre entreprise.</p>
+    </div>
+</div>
 
-    {% if messages %}
-        <ul class="messages list-unstyled mb-4">
-            {% for message in messages %}
-                <li class="alert alert-{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    <div class="row text-center mb-4">
-        <div class="col-md-6">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Produits</h5>
-                    <p class="card-text fs-2">{{ total_produits }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Clients</h5>
-                    <p class="card-text fs-2">{{ total_clients }}</p>
-                </div>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users"></i> Total Clients</h5>
+                <h1 class="card-text">{{ total_clients }}</h1>
             </div>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2 class="card-title mb-0">Navigation Rapide</h2>
-        </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item"><a href="{% url 'interface_vente' %}" class="btn btn-primary btn-block">Accéder à l'Interface de Vente</a></li>
-                <li class="list-group-item"><a href="{% url 'liste_factures' %}" class="btn btn-secondary btn-block">Voir la Liste des Factures</a></li>
-                <li class="list-group-item"><a href="{% url 'admin:index' %}" class="btn btn-info btn-block">Accéder à l'Administration (Jazzmin)</a></li>
-            </ul>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-boxes"></i> Total Produits</h5>
+                <h1 class="card-text">{{ total_produits }}</h1>
+            </div>
         </div>
     </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title mb-0">Dernières Factures</h2>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-file-invoice-dollar"></i> Total Factures</h5>
+                <h1 class="card-text">{{ total_factures }}</h1>
+            </div>
         </div>
-        <div class="card-body">
-            {% if dernieres_factures %}
-            <ul class="list-group list-group-flush">
-                {% for facture in dernieres_factures %}
-                    <li class="list-group-item">
-                        Facture #{{ facture.id }} - Client: {{ facture.client.nom }} - Montant: {{ facture.montant_total }} - Date: {{ facture.date_facturation|date:"d/m/Y" }}
-                        <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-sm btn-outline-primary ms-2">Détails</a>
-                    </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p>Aucune facture récente.</p>
-            {% endif %}
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-hand-holding-usd"></i> Solde Dû Total</h5>
+                <h1 class="card-text">{{ solde_total|floatformat:2 }} FCFA</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Liens rapides</h4>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'liste_produits' %}" class="btn btn-outline-success">Gérer les produits</a>
+                <a href="{% url 'liste_factures' %}" class="btn btn-outline-primary">Gérer les factures</a>
+                <a href="{% url 'interface_vente' %}" class="btn btn-outline-info">Accéder à l'interface de vente</a>
+                <a href="{% url 'inventaire_benefice_journee' %}" class="btn btn-outline-warning">Voir le bénéfice du jour</a>
+            </div>
         </div>
     </div>
 </div>

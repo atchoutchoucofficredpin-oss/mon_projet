@@ -1,9 +1,14 @@
+# gestion_produits_stock/urls.py
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Page d'accueil de l'application
+    # Page d'accueil/Tableau de bord
     path('', views.home, name='home'),
+    
+    # URL pour le rapport de bénéfice journalier (NOUVEAU)
+    path('inventaire/benefice-journee/', views.inventaire_benefice_journee, name='inventaire_benefice_journee'),
     
     # URLS pour les clients
     path('clients/', views.liste_clients, name='liste_clients'),
@@ -11,7 +16,6 @@ urlpatterns = [
     path('clients/modifier/<int:pk>/', views.modifier_client, name='modifier_client'),
     path('clients/supprimer/<int:pk>/', views.supprimer_client, name='supprimer_client'),
     path('clients/<int:pk>/historique/', views.historique_client, name='historique_client'),
-    # Nouvelle URL pour l'interface "Banque et Caisse"
     path('clients/banque-caisse/<int:pk>/', views.banque_caisse_client, name='banque_caisse_client'),
 
     # URLS pour les catégories
@@ -51,6 +55,7 @@ urlpatterns = [
     path('factures/<int:facture_pk>/ajouter_paiement/', views.ajouter_paiement, name='ajouter_paiement'),
 
     # URLs pour l'interface de vente
+    path('deconnexion-vente/', views.deconnexion_vente, name='deconnexion_vente'),
     path('vente/', views.interface_vente, name='interface_vente'),
     path('vente/modifier/<int:pk>/', views.modifier_vente, name='modifier_vente'),
 

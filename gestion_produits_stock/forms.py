@@ -8,8 +8,10 @@ from .models import (
     Client, Categorie, Fournisseur, Produit, LieuStockage,
     Stock, StockMovement, Facture, LigneFacture, Paiement
 )
+from django.utils import timezone
+from django.forms.widgets import DateInput
 
-# Formulaire pour les Clients
+
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
@@ -27,7 +29,7 @@ class ClientForm(forms.ModelForm):
             'email': 'Email',
         }
 
-# Formulaire pour les Catégories
+
 class CategorieForm(forms.ModelForm):
     class Meta:
         model = Categorie
@@ -41,7 +43,7 @@ class CategorieForm(forms.ModelForm):
             'description': 'Description',
         }
 
-# Formulaire pour les Fournisseurs
+
 class FournisseurForm(forms.ModelForm):
     class Meta:
         model = Fournisseur
@@ -61,46 +63,47 @@ class FournisseurForm(forms.ModelForm):
             'adresse': 'Adresse',
         }
 
-# Formulaire pour les Produits
+
 class ProduitForm(forms.ModelForm):
     class Meta:
         model = Produit
-        fields = ['nom', 'code_produit', 'description', 'prix_unitaire', 'categorie', 'fournisseur']
+        fields = ['nom', 'code_produit', 'categorie', 'fournisseur', 'prix_unitaire', 'prix_achat', 'seuil_alerte', 'description'] # AJOUT de 'prix_achat' et 'seuil_alerte'
         widgets = {
-            'nom': forms.TextInput(attrs={'class': 'form-control'}),
-            'code_produit': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'prix_unitaire': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'nom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom du produit'}),
+            'code_produit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Code du produit'}),
             'categorie': forms.Select(attrs={'class': 'form-control'}),
             'fournisseur': forms.Select(attrs={'class': 'form-control'}),
+            'prix_unitaire': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'prix_achat': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}), # NOUVEAU
+            'seuil_alerte': forms.NumberInput(attrs={'class': 'form-control'}), # NOUVEAU
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
         labels = {
             'nom': 'Nom',
             'code_produit': 'Code Produit',
-            'description': 'Description',
-            'prix_unitaire': 'Prix Unitaire',
             'categorie': 'Catégorie',
             'fournisseur': 'Fournisseur',
+            'prix_unitaire': 'Prix de Vente',
+            'prix_achat': "Prix d'Achat", # NOUVEAU
+            'seuil_alerte': "Seuil d'Alerte", # NOUVEAU
+            'description': 'Description',
         }
 
 
-# Formulaire pour les Lieux de Stockage
 class LieuStockageForm(forms.ModelForm):
     class Meta:
         model = LieuStockage
-        fields = ['nom', 'adresse', 'description']
+        fields = ['nom', 'description']
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom du lieu de stockage'}),
-            'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Adresse du lieu de stockage'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description du lieu de stockage'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Description du lieu'}),
         }
         labels = {
             'nom': 'Nom',
-            'adresse': 'Adresse',
             'description': 'Description',
         }
 
-# Formulaire pour les Stocks
+
 class StockForm(forms.ModelForm):
     class Meta:
         model = Stock
@@ -108,7 +111,7 @@ class StockForm(forms.ModelForm):
         widgets = {
             'produit': forms.Select(attrs={'class': 'form-control'}),
             'lieu_stockage': forms.Select(attrs={'class': 'form-control'}),
-            'quantite': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'quantite': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
         }
         labels = {
             'produit': 'Produit',
@@ -116,100 +119,44 @@ class StockForm(forms.ModelForm):
             'quantite': 'Quantité',
         }
 
-# Formulaire pour les Mouvements de Stock
+
 class StockMovementForm(forms.ModelForm):
     class Meta:
         model = StockMovement
-        fields = ['produit', 'lieu_stockage_source', 'lieu_stockage_destination', 'quantite', 'type_mouvement', 'description']
-        widgets = {
-            'date_mouvement': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        }
+        fields = ['produit', 'quantite', 'type_mouvement', 'lieu_stockage_source', 'lieu_stockage_destination', 'description']
 
-# Formulaire pour les Factures
+
 class FactureForm(forms.ModelForm):
     class Meta:
         model = Facture
-        fields = ['client', 'date_facturation', 'notes'] # 'est_payee' et 'montant_total' sont calculés automatiquement
+        fields = ['client', 'date_echeance'] # AJOUT de 'date_echeance'
         widgets = {
-            'client': forms.Select(attrs={'class': 'form-control select2-client'}),
-            'date_facturation': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Notes sur la facture'}),
+            'date_echeance': DateInput(attrs={'type': 'date', 'class': 'form-control'}), # NOUVEAU
+            'client': forms.Select(attrs={'class': 'form-control'}),
         }
-        labels = {
-            'client': 'Client',
-            'date_facturation': 'Date de facturation',
-            'notes': 'Notes',
-        }
-
-# Formulaire pour les Lignes de Facture
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields['date_echeance'].initial = timezone.now().date() + timezone.timedelta(days=30)
+            
+            
 class LigneFactureForm(forms.ModelForm):
-    produit_nom = forms.CharField(
-        label='Produit',
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control product-search-input', 'placeholder': 'Rechercher un produit...'})
-    )
-    produit = forms.ModelChoiceField(
-        queryset=Produit.objects.all(),
-        required=False,
-        widget=forms.HiddenInput()
-    )
-
     class Meta:
         model = LigneFacture
         fields = ['produit', 'quantite', 'prix_unitaire_negocie']
         widgets = {
-            'quantite': forms.NumberInput(attrs={'class': 'form-control quantite-input', 'min': '0', 'step': 'any'}),
-            'prix_unitaire_negocie': forms.NumberInput(attrs={'class': 'form-control prix-input', 'min': '0', 'step': 'any'}),
+            'produit': forms.Select(attrs={'class': 'form-control produit-select'}),
+            'quantite': forms.NumberInput(attrs={'class': 'form-control quantite-input', 'min': '0', 'step': '0.01'}),
+            'prix_unitaire_negocie': forms.NumberInput(attrs={'class': 'form-control prix-input', 'min': '0', 'step': '0.01'}),
         }
-        labels = {
-            'produit': 'Produit', 
-            'quantite': 'Quantité',
-            'prix_unitaire_negocie': 'Prix Négocié',
-        }
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        produit = cleaned_data.get('produit')
-        quantite = cleaned_data.get('quantite')
 
-        if produit and quantite and quantite > 0:
-            stock = Stock.objects.filter(produit=produit).aggregate(total_quantite=Sum('quantite'))['total_quantite'] or Decimal('0.00')
-            
-            if self.instance and self.instance.pk:
-                stock += self.instance.quantite
 
-            if quantite > stock:
-                self.add_error('quantite', f"Quantité insuffisante en stock. Disponible: {stock:.2f}")
-
-        return cleaned_data
-
-# Formset pour les Lignes de Facture
-LigneFactureFormSet = inlineformset_factory(
-    Facture, 
-    LigneFacture, 
-    form=LigneFactureForm, 
-    extra=1, 
-    can_delete=True,
-    min_num=1,
-    validate_min=True,
-)
-
-# Formulaire pour les Paiements
 class PaiementForm(forms.ModelForm):
     class Meta:
         model = Paiement
-        fields = ['montant_paye', 'date_paiement', 'methode_paiement', 'reference_paiement', 'notes']
+        fields = ['montant_paye', 'methode_paiement']
         widgets = {
-            'montant_paye': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'date_paiement': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'montant_paye': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'methode_paiement': forms.Select(attrs={'class': 'form-control'}),
-            'reference_paiement': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Référence (ex: n° chèque, transaction ID)'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Notes sur le paiement'}),
-        }
-        labels = {
-            'montant_paye': 'Montant payé',
-            'date_paiement': 'Date du paiement',
-            'methode_paiement': 'Méthode de paiement',
-            'reference_paiement': 'Référence du paiement',
-            'notes': 'Notes',
         }

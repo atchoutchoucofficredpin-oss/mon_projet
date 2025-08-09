@@ -1,0 +1,66 @@
+{% extends 'gestion_produits_stock/base.html' %}
+{% block title %}Bénéfice du jour - ADAMA SOUMARE DISTRIBUTION (ASD){% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">Rapport de bénéfice journalier</h2>
+        <p class="text-center">Rapport pour la date du : <strong>{{ date_jour|date:"d F Y" }}</strong></p>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-money-bill-wave"></i> Revenu Total</h5>
+                <h2 class="card-text">{{ revenu_total|floatformat:2 }} FCFA</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-shopping-cart"></i> Coût Total</h5>
+                <h2 class="card-text">{{ cout_total|floatformat:2 }} FCFA</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-line"></i> Bénéfice Net</h5>
+                <h2 class="card-text">{{ benefice_journee|floatformat:2 }} FCFA</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Détail des ventes du jour</h4>
+            </div>
+            <div class="card-body">
+                {% if factures_jour %}
+                <ul class="list-group">
+                    {% for facture in factures_jour %}
+                    <li class="list-group-item">
+                        <a href="{% url 'detail_facture' facture.pk %}">Facture #{{ facture.pk }}</a>
+                        pour le client **{{ facture.client.nom }}**
+                        le **{{ facture.date_facturation|date:"H:i" }}**
+                        - Montant : {{ facture.montant_total|floatformat:2 }} FCFA.
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="alert alert-info" role="alert">
+                    Aucune vente enregistrée pour aujourd'hui.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

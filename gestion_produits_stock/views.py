@@ -16,6 +16,9 @@ from decimal import Decimal
 from django.utils import timezone
 from django.db.models import Sum, Q, F
 from django.db.models.functions import Coalesce
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth import logout
+from django.urls import reverse
 
 import traceback
 
@@ -33,13 +36,68 @@ LigneFactureFormSet = inlineformset_factory(
     Facture, LigneFacture, form=LigneFactureForm, extra=1, can_delete=True
 )
 
-
-# --- Vue d'accueil (Home) ---
+# --- Vue du Tableau de Bord (Home) ---
 def home(request):
     """
-    Vue pour la page d'accueil de l'application.
+    Vue pour la page d'accueil de l'application (Tableau de Bord).
     """
-    return render(request, 'gestion_produits_stock/home.html')
+    # Ce code déconnecte un super-utilisateur de l'interface de vente
+    if request.user.is_authenticated and request.user.is_superuser:
+        logout(request)
+        messages.info(request, "Super-utilisateur déconnecté. Veuillez vous connecter avec un compte utilisateur autorisé pour l'interface de vente.")
+        return redirect(reverse('admin:login'))
+    
+    # Récupérer les données pour le tableau de bord
+    context = {
+        'total_clients': Client.objects.count(),
+        'total_produits': Produit.objects.count(),
+        'total_factures': Facture.objects.count(),
+        'solde_total': Facture.objects.filter(est_payee=False).aggregate(
+            solde=Coalesce(Sum('montant_total'), Decimal('0.00')) - Coalesce(Sum('paiement__montant_paye'), Decimal('0.00'))
+        )['solde'] or Decimal('0.00'),
+    }
+    
+    return render(request, 'gestion_produits_stock/home.html', context)
+
+
+# --- Nouvelle vue pour le bénéfice journalier ---
+def inventaire_benefice_journee(request):
+    """
+    Calcule et affiche le bénéfice réalisé sur les ventes de la journée.
+    """
+    aujourdhui = timezone.now().date()
+    factures_jour = Facture.objects.filter(date_facturation__date=aujourdhui)
+
+    revenu_total = Decimal('0.00')
+    cout_total = Decimal('0.00')
+
+    for facture in factures_jour:
+        lignes_facture = LigneFacture.objects.filter(facture=facture).select_related('produit')
+        for ligne in lignes_facture:
+            revenu_total += ligne.quantite * ligne.prix_unitaire_negocie
+            if ligne.produit and ligne.produit.prix_achat:
+                cout_total += ligne.quantite * ligne.produit.prix_achat
+    
+    benefice_journee = revenu_total - cout_total
+    
+    context = {
+        'date_jour': aujourdhui,
+        'revenu_total': revenu_total,
+        'cout_total': cout_total,
+        'benefice_journee': benefice_journee,
+        'factures_jour': factures_jour,
+    }
+    
+    return render(request, 'gestion_produits_stock/inventaire_benefice_journee.html', context)
+
+
+# --- Nouvelle vue pour la déconnexion avant la page de vente ---
+def deconnexion_vente(request):
+    """
+    Déconnecte l'utilisateur en cours et le redirige vers la page de connexion de l'admin.
+    """
+    logout(request)
+    return redirect(reverse('admin:login'))
 
 
 # --- Vues pour les Clients ---
@@ -459,7 +517,6 @@ def generer_facture_pdf(request, pk):
     # Tableau des produits
     data = [['Produit', 'Quantité', 'Prix Unitaire', 'Total']]
     for ligne in lignes_facture:
-        # Correction ici : Utilisation de 'total_ligne' au lieu de 'total'
         data.append([
             ligne.produit.nom,
             str(ligne.quantite),
@@ -548,6 +605,7 @@ def ajouter_paiement(request, facture_pk):
 
 
 # --- Vues pour l'interface de vente ---
+@permission_required('gestion_produits_stock.can_access_interface_vente', raise_exception=True)
 def interface_vente(request):
     if request.method == 'POST':
         facture_form = FactureForm(request.POST, prefix='facture')
@@ -608,26 +666,23 @@ def interface_vente(request):
                     return redirect('detail_facture', pk=facture.pk)
                 else:
                     messages.error(request, "Erreur dans le formulaire. Veuillez vérifier les informations.")
-                    # Log des erreurs du formulaire et du formset pour le débogage
                     print("Erreurs FactureForm:", facture_form.errors)
                     print("Erreurs Formset:", formset.errors)
         except ValidationError as e:
-            # L'erreur de stock est déjà gérée par les messages
             print(f"Validation Error: {e}")
         except Exception as e:
             messages.error(request, "Une erreur inattendue est survenue lors de l'enregistrement de la facture.")
             traceback.print_exc()
 
     else:
-        facture_form = FactureForm(prefix='facture', initial={'date_facturation': timezone.now()})
+        facture_form = FactureForm(prefix='facture')
         formset = LigneFactureFormSet(prefix='lignes')
-
+        
     context = {
         'facture_form': facture_form,
         'formset': formset,
     }
     return render(request, 'gestion_produits_stock/interface_vente.html', context)
-
 
 def modifier_vente(request, pk):
     facture = get_object_or_404(Facture, pk=pk)
@@ -653,7 +708,6 @@ def modifier_vente(request, pk):
 
                     # Restaurer le stock pour les lignes existantes et vérifier le stock pour les nouvelles lignes
                     for ligne_existante_pk, ligne_existante in lignes_existantes.items():
-                        # Si la ligne n'est pas dans les données du formset (soit elle a été supprimée, soit son contenu a changé), on restaure le stock
                         stock_principal = Stock.objects.get(produit=ligne_existante.produit, lieu_stockage__nom="Principal")
                         stock_principal.quantite += ligne_existante.quantite
                         stock_principal.save()
@@ -735,7 +789,6 @@ def recherche_produit_ajax(request):
         
         results = []
         for produit in produits:
-            # Assurer que si aucun stock n'existe, la quantité soit 0
             stock_quantite = Stock.objects.filter(
                 produit=produit, 
                 lieu_stockage__nom="Principal"
